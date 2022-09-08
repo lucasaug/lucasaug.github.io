@@ -1,0 +1,138 @@
+@font-face {
+    font-family: "poppinsregular";
+    src: url("../assets/Poppins-web/poppins-regular-webfont.woff2") format("woff2"),
+         url("../assets/Poppins-web/poppins-regular-webfont.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: "poppinsregular", sans-serif;
+}
+
+header {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3vh 5vw;
+    margin-left: 10%;
+}
+
+section#presentation {
+    display: flex;
+    align-items: center;
+    gap: 5%;
+}
+
+section#title {
+    color: #FFFFFF;
+}
+
+section#title * {
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: 4rem;
+}
+
+article#techs {
+    border-radius: 25px;
+    flex-basis: 600px;
+}
+
+article#techs img {
+    width: 40px;
+    padding: 1%;
+    margin-bottom: 10px;
+    margin-right: 2.5%;
+    background-color: rgba(200,180,255, 0.5);
+    background: linear-gradient(to top, rgba(200, 180, 255, 0.2), rgba(200, 180, 255, 0.3),  rgba(200, 180, 255, 0.2));
+    border-radius: 10px;
+}
+
+.small-break {
+    display: none;
+}
+
+/* Shrink tech list block if window is too narrow  */
+@media (max-width: 700px) {
+    .small-break {
+        display: block;
+    }
+    article#techs img {
+        margin-right: 8%;
+    }
+    section#presentation img{
+        width: 100px;
+    }
+    h1 {
+        font-size: 3rem;
+    }
+}
+
+main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-around;
+    background-color: rgba(0, 0, 0, .8);
+    padding: 5vh 10vw;
+    margin-top: 3vh;
+    color:  #FFFFFF;
+}
+
+article#description {
+    max-width: 800px;
+    padding: 3vh 0vw;
+    text-align: justify;
+}
+
+div#interests {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    padding: 15px;
+}
+
+/* Display single column list if window is too narrow  */
+@media (max-width: 600px) {
+    div#interests {
+        display: block;
+    }
+}
+
+
+div#interests ul li {
+    padding-bottom: 10px;
+}
+
+article#socials a {
+    margin: 3vh 3vw;
+    display: block;
+    color:  #FFFFFF;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+article#socials a i {
+    font-size: 2rem;
+    margin-right: 5px;
+}
+
+/* Background shader */
+
+.bgcontainer {
+    display: block;
+    top: 0;
+    left: 0;
+    position: fixed;
+    z-index: -100;
+}
+
+.bgcontainer canvas {
+    width: 100vw;
+    height: 100vh;
+}

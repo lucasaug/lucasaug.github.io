@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lucas Augusto's Homepage</title>
+    <script src="https://kit.fontawesome.com/8a08bdf3b6.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <section id="presentation">
+            <figure id="picture">
+                <img src="assets/profile-pic.png" width="300">
+            </figure>
+            <section id="title">
+                <h1>Lucas Augusto</h1>
+                <h2>Software Developer</h2>
+            </section>
+        </section>
+        <article id="techs">
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/django/django-plain-wordmark.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" />
+            <br class="small-break"/>
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" />
+            <br />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" />
+            <br class="small-break"/>
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apachekafka/apachekafka-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg" />
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redis/redis-original.svg" />
+        </article>
+    </header>
+    <main>
+        <article id="description">
+            <p>Hello, my name is Lucas! I'm a brazilian software developer with a B.S. degree in Computer Science from the Federal University of Minas Gerais. I have been working with software development since 2014, mostly with back-end web development, but I am always looking to expand the horizons of my knowledge. My interests include:</p>
+            <div id="interests">
+                <ul>
+                    <li><i class="fa-solid fa-earth-americas"></i> Web development</li>
+                    <li><i class="fa-solid fa-microchip"></i> Systems development</li>
+                </ul>
+                <ul>
+                    <li><i class="fa-solid fa-microscope"></i> Scientific computing</li>
+                    <li><i class="fa-solid fa-music"></i> Creative coding</li>
+                </ul>
+            </div>
+        </article>
+        <article id="socials">
+            <a href="https://www.linkedin.com/in/lucas-augusto-b5873ba0">
+                <i class="fa-brands fa-linkedin"></i> Lucas Augusto
+            </a>
+            <a href="https://github.com/lucasaug">
+                <i class="fa-brands fa-github"></i> /lucasaug
+            </a>
+            <a href="mailto:luc.aug.freire@gmail.com">
+                <i class="fa-solid fa-envelope"></i> luc.aug.freire@gmail.com
+            </a>
+        </article>
+    </main>
+    <div class="bgcontainer">
+        <canvas id="glcanvas"/>
+    </div>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec2 aVertexPosition;
+
+        void main() {
+            gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+        }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        #ifdef GL_ES
+            precision lowp float;
+        #endif
+
+        // Shader License: CC BY 3.0
+        // Heavily based on a shader by Jan Mróz (jaszunio15)
+        // https://www.shadertoy.com/view/3t3GDB
+
+        uniform vec2  iResolution; // viewport resolution (in pixels)
+        uniform float iTime;       // shader playback time (in seconds)
+        uniform vec2  iMouse;      // mouse pixel coords. xy: current
+
+        float grid(vec2 uv)
+        {
+            vec2 size = vec2(uv.y, uv.y * uv.y * 0.2) * 0.01;
+            uv += vec2(0.0, iTime/5.);
+            uv = abs(fract(uv) - 0.5);
+            vec2 lines = smoothstep(size, vec2(0.0), uv);
+            lines += smoothstep(size * 5.0, vec2(0.0), uv);
+            return clamp(lines.x + lines.y, 0.0, 3.0);
+        }
+
+        void main()
+        {
+            vec2 uv = (2.0 * gl_FragCoord.xy - iResolution.xy)/iResolution.y;
+
+            uv.x += (iMouse.x/iResolution.x - 0.5)/5.;
+            uv.y += (iMouse.y/iResolution.y + 0.5)/7.5;
+
+            float fog = smoothstep(0.1, -0.02, abs(uv.y + 0.2));
+            vec3 col = vec3(0.0, 0.1, 0.2);
+            //vec3 col = vec3(0.1, 0.1, 0.3);
+            if (uv.y < -0.2)
+            {
+                uv.y = 3.0 / (abs(uv.y + 0.2) + 0.05);
+                uv.x *= uv.y * 1.0;
+                float gridVal = grid(uv);
+                col = mix(col, vec3(0.7, 0.5, 1.0), gridVal);
+            }
+
+            col += fog * fog * fog * fog;
+            col = mix(vec3(col.r, col.g, col.b) * 0.5, col, 0.);
+
+            gl_FragColor = vec4(col,1.0);
+
+        }
+    </script>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/shader_setup.js"></script>
+</body>
+</html>
