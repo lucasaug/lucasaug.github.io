@@ -6,28 +6,39 @@
     font-style: normal;
 }
 
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
 body {
     font-family: "poppinsregular", sans-serif;
+    width: 100vw;
+    height: 100vh;
 }
 
 header {
     display: flex;
-    gap: 30px;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-start;
-    padding: 3vh 5vw;
-    margin-left: 10%;
+    align-content: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100vw;
+    padding-bottom: 30px;
+    padding-top: 30px;
 }
 
 section#presentation {
     display: flex;
     align-items: center;
-    gap: 5%;
+    gap: 20px;
+    padding-left: 20px;
 }
 
 section#title {
     color: #FFFFFF;
+    width: 300px;
 }
 
 section#title * {
@@ -38,38 +49,55 @@ h1 {
     font-size: 4rem;
 }
 
-article#techs {
-    border-radius: 25px;
-    flex-basis: 600px;
-}
-
 article#techs img {
-    width: 40px;
-    padding: 1%;
-    margin-bottom: 10px;
-    margin-right: 2.5%;
     background-color: rgba(200,180,255, 0.5);
     background: linear-gradient(to top, rgba(200, 180, 255, 0.2), rgba(200, 180, 255, 0.3),  rgba(200, 180, 255, 0.2));
     border-radius: 10px;
+    width: 40px;
+    padding: 4px;
+    margin-bottom: 5px;
 }
 
 .small-break {
     display: none;
 }
 
-/* Shrink tech list block if window is too narrow  */
-@media (max-width: 700px) {
-    .small-break {
-        display: block;
-    }
-    article#techs img {
-        margin-right: 8%;
-    }
-    section#presentation img{
+/* Shrink presentation if window is too narrow  */
+@media (max-width: 650px) {
+    section#presentation img {
         width: 100px;
+    }
+    section#title {
+        width: 210px;
     }
     h1 {
         font-size: 3rem;
+    }
+}
+
+/* Shrink presentation text if window is even narrower */
+@media (max-width: 350px) {
+    section#title {
+        width: 135px;
+    }
+    h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Shrink tech list block if window is too narrow  */
+@media (max-width: 500px) {
+    .small-break {
+        display: block;
+    }
+
+    article#techs {
+        width: 225px;
+        margin: 0 auto;
+    }
+
+    article#techs img {
+        margin-right: 5px;
     }
 }
 
@@ -77,17 +105,20 @@ main {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-around;
-    background-color: rgba(0, 0, 0, .8);
-    padding: 5vh 10vw;
-    margin-top: 3vh;
-    color:  #FFFFFF;
+    align-content: space-around;
+    justify-content: center;
+    gap: 20px;
+    background-color: rgba(0, 0, 0, .9);
+    color: #FFFFFF;
+    width: 100vw;
+    padding-top: 75px;
+    padding-bottom: 50px;
 }
 
 article#description {
-    max-width: 800px;
-    padding: 3vh 0vw;
+    padding: 0px 30px;
     text-align: justify;
+    max-width: 800px;
 }
 
 div#interests {
@@ -101,25 +132,25 @@ div#interests {
 @media (max-width: 600px) {
     div#interests {
         display: block;
+        text-align: left;
     }
 }
-
 
 div#interests ul li {
     padding-bottom: 10px;
 }
 
 article#socials a {
-    margin: 3vh 3vw;
     display: block;
     color:  #FFFFFF;
+    margin-bottom: 20px;
     text-decoration: none;
     font-size: 1rem;
 }
 
 article#socials a i {
-    font-size: 2rem;
     margin-right: 5px;
+    font-size: 2rem;
 }
 
 /* Background shader */
