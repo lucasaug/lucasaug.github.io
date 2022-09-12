@@ -5,12 +5,12 @@ let initTime = new Date();
 let mouseX = 0;
 let mouseY = 0;
 
-window.onmousemove = (event) => {
-    mouseX = event.screenX;
-    mouseY = event.screenY;
-};
-
-console.log("Hey, thank you for checking my homepage! :)");
+if (matchMedia('(pointer:fine)').matches) {
+    window.onmousemove = (event) => {
+        mouseX = event.screenX;
+        mouseY = event.screenY;
+    };
+}
 
 // Code created following the tutorial at
 // https://wdf-dev.gitlab.io/background-intro.html
