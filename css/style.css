@@ -153,6 +153,7 @@ article#socials a i {
 }
 
 .bgcontainer canvas {
+    background: #0d0d19;
     width: 100vw;
     height: 100vh;
 }
