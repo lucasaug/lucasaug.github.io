@@ -1,0 +1,16 @@
+/* Background shader */
+
+.bgcontainer {
+    display: block;
+    top: 0;
+    left: 0;
+    position: fixed;
+    z-index: -100;
+}
+
+.bgcontainer canvas {
+    background: #0d0d19;
+    width: 100vw;
+    height: 100vh;
+}
+

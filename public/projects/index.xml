@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blowfish</title>
+    <link>https://lucasaug.github.io/projects/</link>
+    <description>Recent content on Blowfish</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© 2023 Lucas Augusto</copyright>
+    <atom:link href="https://lucasaug.github.io/projects/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>https://lucasaug.github.io/projects/teste/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/projects/teste/</guid>
+      <description>Teste # Eu tenho uma coisa importante pra te dizer:</description>
+      
+    </item>
+    
+  </channel>
+</rss>

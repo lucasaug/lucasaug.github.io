@@ -1,0 +1,80 @@
+<div class="bgcontainer">
+    <canvas id="glcanvas"/>
+</div>
+<script id="vertex-shader">
+    attribute vec2 aVertexPosition;
+
+    void main() {
+        gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+    }
+</script>
+<script id="fragment-shader">
+    #ifdef GL_ES
+        precision highp float;
+    #endif
+
+    // Shader License: CC BY 3.0
+    // Heavily based on a shader by Jan Mróz (jaszunio15)
+    // https://www.shadertoy.com/view/3t3GDB
+
+    uniform vec2  iResolution; // viewport resolution (in pixels)
+    uniform float iTime;       // shader playback time (in seconds)
+    uniform vec2  iMouse;      // mouse pixel coords. xy: current
+    uniform float  iScroll;    // proportion of page that was scrolled
+
+    float grid(vec2 uv)
+    {
+        vec2 size = vec2(uv.y, uv.y * uv.y * 0.2) * 0.01;
+        uv += vec2(0.0, iTime/5.);
+        uv = abs(fract(uv) - 0.5);
+        vec2 lines = smoothstep(size, vec2(0.0), uv);
+        lines += smoothstep(size * 5.0, vec2(0.0), uv);
+        return clamp(lines.x + lines.y, 0.0, 3.0);
+    }
+
+    float noise2d(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(1.0,73))) * 43758.5453);
+    }
+
+    void main()
+    {
+        vec2 uv = (2.0 * gl_FragCoord.xy - iResolution.xy) / iResolution.y;
+
+        vec2 offsetCoords = iMouse * 300.;
+
+        // uv.x += (offsetCoords.x/iResolution.x - 0.5)/5.;
+        uv.y += (offsetCoords.y/iResolution.y + 0.5)/7.5;
+
+        float fog = smoothstep(0.1, -0.02, abs(uv.y + 0.2));
+        // vec3 col = vec3(0.0, 0.1, 0.2);
+        vec3 col = vec3(0.1, 0.1, 0.2);
+        if (uv.y < -0.2)
+        {
+            uv.y = 3.0 / (abs(uv.y + 0.2) + 0.05);
+            uv.x *= uv.y * 1.0;
+            float gridVal = grid(uv);
+            col = mix(col, vec3(0.6 - 0.2 * (iMouse.x), 0.5, 1.0), gridVal);
+        }
+
+        col += fog * fog * fog * fog;
+        col *= mix(0., 0.5, clamp(sin(iTime * 0.7), 0.75, 1.));
+        if (false && iTime < 1.) {
+            // Getting too spatially correlated over time, maybe divide or
+            // clamp time if this is used outside the if
+            col += vec3(
+                noise2d(    uv * iTime) *
+                noise2d(1.+ uv * iTime) *
+                noise2d(2.+ uv * iTime)
+            ) * exp(-5.*iTime) * 6.;
+        }
+
+        vec4 gridColor = vec4(col, 1.0)/3.;
+        vec4 fadedColor = vec4(0.,0.,0.,1.);
+        float mixProportion = clamp(iScroll, 0., 0.6);
+
+        gl_FragColor = mix(gridColor, fadedColor, mixProportion);
+
+    }
+</script>
+<script src="/js/libs/three.min.js"></script>
+<script src="/js/shader_setup.js"></script>

@@ -1,0 +1,6 @@
+baseURL = 'https://lucasaug.github.io/'
+languageCode = 'en'
+title = 'My personal tech blog'
+
+theme = "blowfish"
+
