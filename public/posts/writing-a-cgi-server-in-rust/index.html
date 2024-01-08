@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth" data-default-appearance="dark"
+  data-auto-appearance="false"><head>
+  <meta charset="utf-8" />
+  
+  <meta http-equiv="content-language" content="en" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  
+  <title>HTTP servers and an overview of the CGI interface &middot; Lucas Augusto&#39;s Blog</title>
+  <meta name="title" content="HTTP servers and an overview of the CGI interface &middot; Lucas Augusto&#39;s Blog" />
+  
+  <meta name="description" content="An overview of HTTP servers and CGI" />
+  <meta name="keywords" content="rust, http, cgi, web, project, backend, " />
+  
+  
+  <link rel="canonical" href="https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/" />
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <link type="text/css" rel="stylesheet" href="/css/main.bundle.min.d08ed7d223cc1da60ce4982fa88392e9747361cc54b53972469ae28447027bd3ee9bf2a8e0d8c8a527b6f95a90ca2c55902a8d33ba24198ff05dad9593eac9d5.css"
+    integrity="sha512-0I7X0iPMHaYM5JgvqIOS6XRzYcxUtTlyRprihEcCe9Pum/Ko4NjIpSe2&#43;VqQyixVkCqNM7okGY/wXa2Vk&#43;rJ1Q==" />
+  
+  
+  <script type="text/javascript" src="/js/appearance.min.516a16745bea5a9bd011138d254cc0fd3973cd55ce6e15f3dec763e7c7c2c7448f8fe7b54cca811cb821b0c7e12cd161caace1dd794ac3d34d40937cbcc9ee12.js"
+    integrity="sha512-UWoWdFvqWpvQERONJUzA/TlzzVXObhXz3sdj58fCx0SPj&#43;e1TMqBHLghsMfhLNFhyqzh3XlKw9NNQJN8vMnuEg=="></script>
+  
+  
+  
+  
+  
+  
+  
+  
+  <script defer type="text/javascript" id="script-bundle" src="/js/main.bundle.min.911bd9741247c092f3a38757ca26b07e6bf319209e5162bbc5a609bae50fa2ea13b3c09f8f2c3d1cfd66c0b6885f0b2137bb43fee6404db177d90abde3c09547.js"
+    integrity="sha512-kRvZdBJHwJLzo4dXyiawfmvzGSCeUWK7xaYJuuUPouoTs8Cfjyw9HP1mwLaIXwshN7tD/uZATbF32Qq948CVRw==" data-copy="" data-copied=""></script>
+  
+  <script src="/js/zoom.min.js"></script>
+  
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:title" content="HTTP servers and an overview of the CGI interface" />
+<meta property="og:description" content="A toy project in Rust" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/" /><meta property="og:image" content="https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/featured.jpg"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-01-07T00:00:00+00:00" />
+<meta property="article:modified_time" content="2024-01-07T00:00:00+00:00" />
+
+  <meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/featured.jpg"/>
+<meta name="twitter:title" content="HTTP servers and an overview of the CGI interface"/>
+<meta name="twitter:description" content="A toy project in Rust"/>
+
+  
+  <script type="application/ld+json">
+  [{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "articleSection": "Posts",
+    "name": "HTTP servers and an overview of the CGI interface",
+    "headline": "HTTP servers and an overview of the CGI interface",
+    "description": "A toy project in Rust",
+    "abstract": "An overview of HTTP servers and CGI",
+    "inLanguage": "en",
+    "url" : "https:\/\/lucasaug.github.io\/posts\/writing-a-cgi-server-in-rust\/",
+    "author" : {
+      "@type": "Person",
+      "name": "Lucas Augusto"
+    },
+    "copyrightYear": "2024",
+    "dateCreated": "2024-01-07T00:00:00\u002b00:00",
+    "datePublished": "2024-01-07T00:00:00\u002b00:00",
+    
+    "dateModified": "2024-01-07T00:00:00\u002b00:00",
+    
+    "keywords": ["rust","http","cgi","web","project","backend"],
+    
+    "mainEntityOfPage": "true",
+    "wordCount": "2368"
+  }]
+  </script>
+
+
+  
+  
+  <meta name="author" content="Lucas Augusto" />
+  
+  
+  
+  <link href="https://github.com/lucasaug" rel="me" />
+  
+  
+  <link href="https://www.linkedin.com/in/lucas-augusto-b5873ba0/" rel="me" />
+  
+  
+  <link href="mailto:luc.aug.freire@gmail.com" rel="me" />
+  
+  
+  
+  
+
+<script src="/lib/jquery/jquery.slim.min.js" integrity=""></script>
+
+
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true
+  });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+  <meta name="theme-color"/>
+  
+  
+</head>
+<body
+  class="flex flex-col h-screen px-6 m-auto text-lg leading-7 max-w-7xl bg-neutral text-neutral-900 dark:bg-neutral-800 dark:text-neutral sm:px-14 md:px-24 lg:px-32">
+  <div id="the-top" class="absolute flex self-center">
+    <a class="px-3 py-1 text-sm -translate-y-8 rounded-b-lg bg-primary-200 focus:translate-y-0 dark:bg-neutral-600"
+      href="#main-content"><span
+        class="font-bold text-primary-600 ltr:pr-2 rtl:pl-2 dark:text-primary-400">&darr;</span>Skip to main content</a>
+  </div>
+  
+  
+  <div style="padding-left:0;padding-right:0;padding-top:2px;padding-bottom:3px"
+    class="main-menu flex items-center justify-between px-4 py-6 sm:px-6 md:justify-start space-x-3">
+    
+    <div class="flex flex-1 items-center justify-between">
+        <nav class="flex space-x-3">
+
+            <a href="/" class="text-base font-medium text-gray-500 hover:text-gray-900">Lucas Augusto&rsquo;s Blog</a>
+
+
+        </nav>
+        <nav class="hidden md:flex items-center space-x-5 md:ml-12 h-12">
+
+            
+            
+            
+  <a href="/posts/"  class="flex items-center">
+    
+    <span  class="mr-1" >
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 32C114.6 32 .0272 125.1 .0272 240c0 49.63 21.35 94.98 56.97 130.7c-12.5 50.37-54.27 95.27-54.77 95.77c-2.25 2.25-2.875 5.734-1.5 8.734C1.979 478.2 4.75 480 8 480c66.25 0 115.1-31.76 140.6-51.39C181.2 440.9 217.6 448 256 448c141.4 0 255.1-93.13 255.1-208S397.4 32 256 32z"/></svg>
+
+  </span>
+
+
+    </span>
+    
+    <p class="text-base font-medium text-gray-500 hover:text-gray-900" title="Posts">
+        Blog
+    </p>
+</a>
+
+
+            
+            
+  <a href="/projects/"  class="flex items-center">
+    
+    <span  class="mr-1" >
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+<path fill="currentColor"  d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+  </span>
+
+
+    </span>
+    
+    <p class="text-base font-medium text-gray-500 hover:text-gray-900" title="">
+        Projects
+    </p>
+</a>
+
+
+            
+            
+  <a href="/about/"  class="flex items-center">
+    
+    <span  class="mr-1" >
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 128c17.67 0 32 14.33 32 32c0 17.67-14.33 32-32 32S224 177.7 224 160C224 142.3 238.3 128 256 128zM296 384h-80C202.8 384 192 373.3 192 360s10.75-24 24-24h16v-64H224c-13.25 0-24-10.75-24-24S210.8 224 224 224h32c13.25 0 24 10.75 24 24v88h16c13.25 0 24 10.75 24 24S309.3 384 296 384z"/></svg>
+
+  </span>
+
+
+    </span>
+    
+    <p class="text-base font-medium text-gray-500 hover:text-gray-900" title="">
+        About
+    </p>
+</a>
+
+
+            
+            
+
+            
+
+
+            
+
+
+            
+            
+
+        </nav>
+        <div class="flex md:hidden items-center space-x-5 md:ml-12">
+
+            <span></span>
+
+            
+
+
+            
+
+            
+            
+
+        </div>
+    </div>
+    <div class="-my-2 -mr-2 md:hidden">
+
+        <label id="menu-button" for="menu-controller" class="block">
+            <input type="checkbox" id="menu-controller" class="hidden" />
+            <div class="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400">
+                
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 96C0 78.33 14.33 64 32 64H416C433.7 64 448 78.33 448 96C448 113.7 433.7 128 416 128H32C14.33 128 0 113.7 0 96zM0 256C0 238.3 14.33 224 32 224H416C433.7 224 448 238.3 448 256C448 273.7 433.7 288 416 288H32C14.33 288 0 273.7 0 256zM416 448H32C14.33 448 0 433.7 0 416C0 398.3 14.33 384 32 384H416C433.7 384 448 398.3 448 416C448 433.7 433.7 448 416 448z"/></svg>
+
+  </span>
+
+
+            </div>
+            <div id="menu-wrapper" style="padding-top:5px;"
+                class="fixed inset-0 z-30 invisible w-screen h-screen m-0 overflow-auto transition-opacity opacity-0 cursor-default bg-neutral-100/50 backdrop-blur-sm dark:bg-neutral-900/50">
+                <ul
+                    class="flex space-y-2 mt-3 flex-col items-end w-full px-6 py-6 mx-auto overflow-visible list-none ltr:text-right rtl:text-left max-w-7xl">
+
+                    <li>
+                        <span
+                            class="cursor-pointer inline-block align-text-bottom hover:text-primary-600 dark:hover:text-primary-400">
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 361.4c12.5 12.5 12.5 32.75 0 45.25C304.4 412.9 296.2 416 288 416s-16.38-3.125-22.62-9.375L160 301.3L54.63 406.6C48.38 412.9 40.19 416 32 416S15.63 412.9 9.375 406.6c-12.5-12.5-12.5-32.75 0-45.25l105.4-105.4L9.375 150.6c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L160 210.8l105.4-105.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-105.4 105.4L310.6 361.4z"/></svg>
+
+  </span>
+
+</span>
+                    </li>
+
+                    
+                    
+
+                    
+  <li class="mt-1">
+    <a href="/posts/"  class="flex items-center">
+        
+        <div  class="mr-2" >
+            
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 32C114.6 32 .0272 125.1 .0272 240c0 49.63 21.35 94.98 56.97 130.7c-12.5 50.37-54.27 95.27-54.77 95.77c-2.25 2.25-2.875 5.734-1.5 8.734C1.979 478.2 4.75 480 8 480c66.25 0 115.1-31.76 140.6-51.39C181.2 440.9 217.6 448 256 448c141.4 0 255.1-93.13 255.1-208S397.4 32 256 32z"/></svg>
+
+  </span>
+
+
+        </div>
+        
+        <p class="text-bg font-bg text-gray-500 hover:text-gray-900" title="Posts">
+            Blog
+        </p>
+    </a>
+</li>
+
+
+
+                    
+
+                    
+  <li class="mt-1">
+    <a href="/projects/"  class="flex items-center">
+        
+        <div  class="mr-2" >
+            
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+<path fill="currentColor"  d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+  </span>
+
+
+        </div>
+        
+        <p class="text-bg font-bg text-gray-500 hover:text-gray-900" title="">
+            Projects
+        </p>
+    </a>
+</li>
+
+
+
+                    
+
+                    
+  <li class="mt-1">
+    <a href="/about/"  class="flex items-center">
+        
+        <div  class="mr-2" >
+            
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 128c17.67 0 32 14.33 32 32c0 17.67-14.33 32-32 32S224 177.7 224 160C224 142.3 238.3 128 256 128zM296 384h-80C202.8 384 192 373.3 192 360s10.75-24 24-24h16v-64H224c-13.25 0-24-10.75-24-24S210.8 224 224 224h32c13.25 0 24 10.75 24 24v88h16c13.25 0 24 10.75 24 24S309.3 384 296 384z"/></svg>
+
+  </span>
+
+
+        </div>
+        
+        <p class="text-bg font-bg text-gray-500 hover:text-gray-900" title="">
+            About
+        </p>
+    </a>
+</li>
+
+
+
+                    
+                    
+
+                </ul>
+                
+
+            </div>
+        </label>
+    </div>
+</div>
+
+
+
+
+
+  
+  <div class="relative flex flex-col grow">
+    <main id="main-content" class="grow">
+      
+
+
+<article>
+  
+
+  <header id="single_header" class="mt-5 max-w-prose">
+    
+    <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">
+      HTTP servers and an overview of the CGI interface
+    </h1>
+    <div class="mt-1 mb-6 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="flex flex-row flex-wrap items-center">
+  
+  
+  <time datetime="2024-01-07 00:00:00 &#43;0000 UTC">7 January 2024</time><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">12 mins</span>
+  
+
+  
+  
+</div>
+
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+    
+    
+
+    
+
+    
+
+    
+
+    
+  
+  </header>
+  
+  <section class="flex flex-col max-w-full mt-0 prose dark:prose-invert lg:flex-row">
+    
+     <div
+      class="order-first sm:max-w-prose lg:ml-auto px-0 lg:order-last lg:max-w-xs ltr:lg:pl-8 rtl:lg:pr-8">
+      <div class="toc ltr:pl-5 rtl:pr-5 print:hidden lg:sticky lg:top-10">
+
+         <details open class="mt-0 overflow-hidden rounded-lg ltr:-ml-5 ltr:pl-5 rtl:-mr-5 rtl:pr-5 hidden lg:block">
+  <summary
+    class="block py-1 text-lg font-semibold cursor-pointer bg-neutral-100 text-neutral-800 ltr:-ml-5 ltr:pl-5 rtl:-mr-5 rtl:pr-5 dark:bg-neutral-700 dark:text-neutral-100 lg:hidden">
+    Table of Contents
+  </summary>
+  <div
+    class="min-w-[220px] py-2 border-dotted border-neutral-300 ltr:-ml-5 ltr:border-l ltr:pl-5 rtl:-mr-5 rtl:border-r rtl:pr-5 dark:border-neutral-600">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#an-introduction-to-the-http-protocol">An introduction to the HTTP protocol</a></li>
+    <li><a href="#dynamic-behaviour-with-cgi">Dynamic behaviour with CGI</a>
+      <ul>
+        <li><a href="#interface-description">Interface description</a></li>
+        <li><a href="#cgi-metavariables">CGI Metavariables</a></li>
+        <li><a href="#cgi-response">CGI Response</a>
+          <ul>
+            <li><a href="#cgi-response-header-fields">CGI response header fields</a></li>
+            <li><a href="#cgi-response-types">CGI response types</a></li>
+          </ul>
+        </li>
+        <li><a href="#some-cgi-script-examples">Some CGI script examples</a></li>
+        <li><a href="#cgi-drawbacks-and-modern-alternatives">CGI drawbacks and modern alternatives</a></li>
+      </ul>
+    </li>
+    <li><a href="#conclusion">Conclusion</a></li>
+    <li><a href="#references">References</a></li>
+    <li><a href="#credits">Credits</a></li>
+  </ul>
+</nav>
+  </div>
+</details>
+<details class="mt-0 overflow-hidden rounded-lg ltr:-ml-5 ltr:pl-5 rtl:-mr-5 rtl:pr-5 lg:hidden">
+  <summary
+    class="py-1 text-lg font-semibold cursor-pointer bg-neutral-100 text-neutral-800 ltr:-ml-5 ltr:pl-5 rtl:-mr-5 rtl:pr-5 dark:bg-neutral-700 dark:text-neutral-100 lg:hidden">
+    Table of Contents
+  </summary>
+  <div
+    class="py-2 border-dotted border-neutral-300 ltr:-ml-5 ltr:border-l ltr:pl-5 rtl:-mr-5 rtl:border-r rtl:pr-5 dark:border-neutral-600">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#an-introduction-to-the-http-protocol">An introduction to the HTTP protocol</a></li>
+    <li><a href="#dynamic-behaviour-with-cgi">Dynamic behaviour with CGI</a>
+      <ul>
+        <li><a href="#interface-description">Interface description</a></li>
+        <li><a href="#cgi-metavariables">CGI Metavariables</a></li>
+        <li><a href="#cgi-response">CGI Response</a>
+          <ul>
+            <li><a href="#cgi-response-header-fields">CGI response header fields</a></li>
+            <li><a href="#cgi-response-types">CGI response types</a></li>
+          </ul>
+        </li>
+        <li><a href="#some-cgi-script-examples">Some CGI script examples</a></li>
+        <li><a href="#cgi-drawbacks-and-modern-alternatives">CGI drawbacks and modern alternatives</a></li>
+      </ul>
+    </li>
+    <li><a href="#conclusion">Conclusion</a></li>
+    <li><a href="#references">References</a></li>
+    <li><a href="#credits">Credits</a></li>
+  </ul>
+</nav>
+  </div>
+</details>
+
+   </div>
+      </div>
+      
+
+      <div class="min-w-0 min-h-0 max-w-fit">
+        
+        
+
+
+        <div class="max-w-prose mb-20">
+          <p>After finishing the <a href="https://doc.rust-lang.org/book/"   target="_blank">
+    Rust book</a> and its final project (a very simple HTTP server), I decided to expand it to deal with more scenarios, and also add in some dynamic behavior with CGI for fun. This was a good opportunity to learn more about HTTP and CGI and inspired me to write about it.</p>
+<div id="an-introduction-to-the-http-protocol" class="anchor"></div>
+<h2 class="relative group">An introduction to the HTTP protocol 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#an-introduction-to-the-http-protocol" aria-label="Anchor">#</a></span>        
+    
+</h2>
+<p>The <a href="https://en.wikipedia.org/wiki/HTTP"   target="_blank">
+    HTTP protocol</a> is used to access resources and transmit data over the web. When you access a web page in a browser, it sends an HTTP request to a computer running the server. Consider the following request:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-http" data-lang="http"><span class="line"><span class="cl"><span class="nf">GET</span> <span class="nn">/</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">Host</span><span class="o">:</span> <span class="l">example.org</span></span></span></code></pre></div>
+<p>The first line contains an <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods"   target="_blank">
+    HTTP verb</a>, in this case <code>GET</code>. There are different HTTP verbs (or methods) used to perform different actions with a given resource. The <code>GET</code> method conventionally indicates that we want to read the resource. The following <code>\</code> represents a path to the resource we want to access (in this case, the root path). And finally, <code>HTTP/1.1</code> represents which version of HTTP we are using.
+Following this first line, a list of <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers"   target="_blank">
+    headers</a> is supplied. These headers give the server some metadata about our request. In our case, we just supplied the <code>Host</code> header, which tells the server program what is the domain to which we are sending our request.</p>
+<p>If you have the <code>netcat</code> command available, you can actually interact with an HTTP server and directly send a request. Run <code>netcat example.org 80</code>, which opens up a <a href="https://en.wikipedia.org/wiki/Transmission_Control_Protocol"   target="_blank">
+    TCP</a> connection to example.org at port 80 (the default port for HTTP). Then you can copy and paste the request above and press enter twice. The server will respond with something like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-plaintext" data-lang="plaintext"><span class="line"><span class="cl">HTTP/1.1 200 OK
+</span></span><span class="line"><span class="cl">Accept-Ranges: bytes
+</span></span><span class="line"><span class="cl">*a bunch of other HTTP headers*
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">Content-Length: 1256
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">*the actual HTML for the page*</span></span></code></pre></div>
+<p>At this point you can close the connection to the server by killing netcat with CTRL+C.</p>
+<p>The response contains an initial line that is somewhat similar to the request&rsquo;s, indicating the HTTP version being used, and then an <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status"   target="_blank">
+    HTTP status code</a>, in this case <code>200 OK</code> indicating that the request could be fulfilled successfully. Following that we have some headers for the response, a blank line, and then the actual data of interest (the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#body"   target="_blank">
+    body</a>).</p>
+<p>Speaking of it, the HTTP request can also have a body, for instance:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-http" data-lang="http"><span class="line"><span class="cl"><span class="nf">POST</span> <span class="nn">/anything</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">Host</span><span class="o">:</span> <span class="l">httpbin.org</span>
+</span></span><span class="line"><span class="cl"><span class="n">Content-Length</span><span class="o">:</span> <span class="l">10</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="g">1234567890</span></span></span></code></pre></div>
+<p>The above request accesses the <code>/anything</code> path on <a href="httpbin.org"  >
+    httpbin.org</a>, a utility for inspecting and testing HTTP requests. This specific path responds with data about the request sent to it. If you run <code>netcat httpbin.org 80</code> and send this request you will get a response similar to this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-http" data-lang="http"><span class="line"><span class="cl"><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+</span></span><span class="line"><span class="cl"><span class="n">Date</span><span class="o">:</span> <span class="l">Thu, 28 Dec 2023 05:28:02 GMT</span>
+</span></span><span class="line"><span class="cl"><span class="n">Content-Type</span><span class="o">:</span> <span class="l">application/json</span>
+</span></span><span class="line"><span class="cl"><span class="n">Content-Length</span><span class="o">:</span> <span class="l">332</span>
+</span></span><span class="line"><span class="cl"><span class="n">Connection</span><span class="o">:</span> <span class="l">keep-alive</span>
+</span></span><span class="line"><span class="cl"><span class="n">Server</span><span class="o">:</span> <span class="l">gunicorn/19.9.0</span>
+</span></span><span class="line"><span class="cl"><span class="n">Access-Control-Allow-Origin</span><span class="o">:</span> <span class="l">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">Access-Control-Allow-Credentials</span><span class="o">:</span> <span class="l">true</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;args&#34;</span><span class="p">:</span> <span class="p">{},</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;data&#34;</span><span class="p">:</span> <span class="s2">&#34;1234567890&#34;</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;files&#34;</span><span class="p">:</span> <span class="p">{},</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;form&#34;</span><span class="p">:</span> <span class="p">{},</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;headers&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;Content-Length&#34;</span><span class="p">:</span> <span class="s2">&#34;10&#34;</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;Host&#34;</span><span class="p">:</span> <span class="s2">&#34;httpbin.org&#34;</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;X-Amzn-Trace-Id&#34;</span><span class="p">:</span> <span class="s2">&#34;...&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">},</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;json&#34;</span><span class="p">:</span> <span class="mi">1234567890</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;method&#34;</span><span class="p">:</span> <span class="s2">&#34;POST&#34;</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;origin&#34;</span><span class="p">:</span> <span class="s2">&#34;XXX.XXX.XXX.XXX&#34;</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;url&#34;</span><span class="p">:</span> <span class="s2">&#34;http://httpbin.org/anything&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></div>
+<p>Here we get a JSON formatted response containing the request body, as seen in the <code>data</code> section of the response. The <code>headers</code> section displays the request headers we sent (the <code>X-Amzn-Trace-Id</code> header wasn&rsquo;t sent by us, but was added on their end). The request body is used for sending additional information to the server such as form data.</p>
+<div style="background-color:white; padding: 20px">
+<div class="mermaid" align="center">
+  
+sequenceDiagram
+    participant B as Browser
+    participant S as HTTP Server
+    participant F as Filesystem
+    B->>S: GET / HTTP/1.1<br />Host: example.org
+    S->>F: Read contents of index.html
+    F->>S: Page contents
+    S->>B: HTTP/1.1 200 OK<br />Date: Thu, 28 Dec 2023 05:28:02 GMT<br /> Content-Type: application/json<br /> Content-Length: 332<br /><br />File contents...
+
+</div>
+
+</div>
+<em>Request/response cycle for a static HTTP server</em>
+<p>An HTTP server&rsquo;s job is to receive and parse requests and return the correct HTTP responses. A simple server is able to serve static HTML pages and files, but many modern applications require things such as database access, file storage, connection to external services, etc. To deal with these scenarios we need servers capable of running more intricate code for each request and generating the content to be returned to the user.</p>
+<div id="dynamic-behaviour-with-cgi" class="anchor"></div>
+<h2 class="relative group">Dynamic behaviour with CGI 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#dynamic-behaviour-with-cgi" aria-label="Anchor">#</a></span>        
+    
+</h2>
+<p>One way to add the dynamic behaviors described above is through CGI (or <a href="https://en.wikipedia.org/wiki/common_gateway_interface"   target="_blank">
+    Common Gateway Interface</a>). It is an interface definition for HTTP servers and it specifies how to communicate with external programs when a request is received. Then, as long as this external program conforms to the CGI specification, it can read the incoming data and generate an adequate response.</p>
+<p>From now on we will refer to an external program which can communicate to a server via CGI as a CGI script (although compiled programs also work perfectly fine for this). HTTP servers capable of communicating with such programs will be referred to as CGI servers.</p>
+<div style="background-color:white; padding: 20px">
+<div class="mermaid" align="center">
+  
+sequenceDiagram
+    participant B as Browser
+    participant S as CGI Server
+    participant Sc as CGI Script
+    B->>S: GET /cgi-bin/example.pl HTTP/1.1<br />Host: myexamplecgiserver.org
+    S->>Sc: Request data via environment<br />variables and standard input
+    activate Sc
+    Note right of Sc: Here the script can<br />access databases,<br />read files,<br />run computations,<br />etc...
+    Sc->>S: Execution response
+    deactivate Sc
+    S->>B: HTTP/1.1 200 OK<br />Date: Thu, 28 Dec 2023 05:28:02 GMT<br /> Content-Type: application/json<br /> Content-Length: 332<br /><br />File contents...
+
+</div>
+
+</div>
+<em>Request/response cycle for a CGI server</em>
+<div id="interface-description" class="anchor"></div>
+<h3 class="relative group">Interface description 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#interface-description" aria-label="Anchor">#</a></span>        
+    
+</h3>
+<p>When a CGI server receives an incoming request, it needs to check if it should return a static page or call a CGI script, which is usually inferred by the request path. CGI scripts are commonly accessed via paths beginning with <code>/cgi-bin/</code>. It then executes the corresponding script from the configured folder in a new process. General data about the request is sent via CGI Metavariables, which are similar in spirit to HTTP headers and passed as environment variables to the process, and the request body is sent via standard input. After the script is finished executing, it returns the response metadata as well as the body formatted such that it can be parsed by the server and returned as a proper HTTP response.</p>
+<p>Precise details regarding the metadata sent to CGI scripts and back to the server can be found in the <a href="https://datatracker.ietf.org/doc/html/rfc3875"   target="_blank">
+    official RFC (3875)</a>, but an overview of such details is given below.</p>
+<div id="cgi-metavariables" class="anchor"></div>
+<h3 class="relative group">CGI Metavariables 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#cgi-metavariables" aria-label="Anchor">#</a></span>        
+    
+</h3>
+<table>
+<thead>
+<tr>
+<th>Metavariable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AUTH_TYPE</code></td>
+<td>Identifies the authentication mechanism being used by the server to authenticate the user, if any.</td>
+</tr>
+<tr>
+<td><code>CONTENT_LENGTH</code></td>
+<td>Size of the body of the incoming request. Must be set if there is any body content in the request.</td>
+</tr>
+<tr>
+<td><code>CONTENT_TYPE</code></td>
+<td>The <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types"   target="_blank">
+    MIME type</a> of the body of the incoming request, if present.</td>
+</tr>
+<tr>
+<td><code>GATEWAY_INTERFACE</code></td>
+<td>Specifies the dialect of CGI being used by the server (<code>CGI/1.1</code> , for example).</td>
+</tr>
+<tr>
+<td><code>PATH_INFO</code></td>
+<td>A URI path to be interpreted by the CGI script.</td>
+</tr>
+<tr>
+<td><code>PATH_TRANSLATED</code></td>
+<td>A translated version of the above path after being parsed as a local URI and translated to the server&rsquo;s document repository structure (to be completely fair, I have no idea why this would be useful, but since the CGI interface is quite dated, maybe it made sense in its original context).</td>
+</tr>
+<tr>
+<td><code>QUERY_STRING</code></td>
+<td>The <a href="https://en.wikipedia.org/wiki/Query_string"   target="_blank">
+    query string</a> supplied in the incoming request. It&rsquo;s normally what comes after <code>?</code> in the URI.</td>
+</tr>
+<tr>
+<td><code>REMOTE_ADDR</code></td>
+<td>The network address of the client sending the request (an IPv4 or IPv6 value).</td>
+</tr>
+<tr>
+<td><code>REMOTE_HOST</code></td>
+<td>The fully qualified domain name of the client sending the request. As long as I am aware, this field only makes sense if the client is registered in a <a href="https://en.wikipedia.org/wiki/Domain_Name_System"   target="_blank">
+    DNS server</a>.</td>
+</tr>
+<tr>
+<td><code>REMOTE_IDENT</code></td>
+<td>Provides identity information reported about the connection.</td>
+</tr>
+<tr>
+<td><code>REMOTE_USER</code></td>
+<td>User identification string supplied by the client as part of user authentication, if applicable. Must be set depending on the value of the AUTH_TYPE metavariable.</td>
+</tr>
+<tr>
+<td><code>REQUEST_METHOD</code></td>
+<td>The HTTP method used by the script to process the request, e.g., GET, POST, PUT, DELETE.</td>
+</tr>
+<tr>
+<td><code>SCRIPT_NAME</code></td>
+<td>The section of the URI path which specifies which CGI script is being called (for instance, if the path was <code>/cgi-bin/my_script.py</code>, this would be set to <code>my_script.py</code>).</td>
+</tr>
+<tr>
+<td><code>SERVER_NAME</code></td>
+<td>Name of the server host to which the client request is directed. It usually means the name of the machine running the CGI server.</td>
+</tr>
+<tr>
+<td><code>SERVER_PORT</code></td>
+<td>The TCP/IP port on which this request was received.</td>
+</tr>
+<tr>
+<td><code>SERVER_PROTOCOL</code></td>
+<td>The name and version of the application protocol used for this CGI request.</td>
+</tr>
+<tr>
+<td><code>SERVER_SOFTWARE</code></td>
+<td>The name and version of the CGI Server. In my project I used the name &ldquo;Rust Web CGI/0.0.1&rdquo;.</td>
+</tr>
+</tbody>
+</table>
+<p>HTTP headers not covered by the fields above can be passed to the CGI script via extra metavariables prefixed with <code>HTTP_</code>.</p>
+<div id="cgi-response" class="anchor"></div>
+<h3 class="relative group">CGI Response 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#cgi-response" aria-label="Anchor">#</a></span>        
+    
+</h3>
+<p>The output from the CGI script is returned via the standard output. It contains a header section and a body section, separated by a blank line. The header section contains one CGI header per line (not to be confused with HTTP headers) and the body is returned to the client as is. The CGI response headers define what kind of response is to be generated.</p>
+<div id="cgi-response-header-fields" class="anchor"></div>
+<h4 class="relative group">CGI response header fields 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#cgi-response-header-fields" aria-label="Anchor">#</a></span>        
+    
+</h4>
+<table>
+<thead>
+<tr>
+<th>Response header field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Content-Type</code></td>
+<td>The MIME type of the body of the CGI response, if present.</td>
+</tr>
+<tr>
+<td><code>Location</code></td>
+<td>Specifies to the server that the script is returning a reference to a document. Then, this field will contain either an absolute URI or a local URI path.</td>
+</tr>
+<tr>
+<td><code>Status</code></td>
+<td>The HTTP status to be returned.</td>
+</tr>
+</tbody>
+</table>
+<p>As with the CGI metavariables, the script is allowed to return extra headers relating to the HTTP protocol or to the specific CGI implementation.</p>
+<div id="cgi-response-types" class="anchor"></div>
+<h4 class="relative group">CGI response types 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#cgi-response-types" aria-label="Anchor">#</a></span>        
+    
+</h4>
+<table>
+<thead>
+<tr>
+<th>Response type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document response</td>
+<td>When the response contains a Content-Type header and a response body. It is the most straightforward response, and the body is returned to the user with the required HTTP metadata.</td>
+</tr>
+<tr>
+<td>Local redirect response</td>
+<td>When the response contains a Location header and its value represents a local URI path. In this case the server generates the response that it would have produced if a request to the specified local URI path was received. For example, if the server is receiving a request for <code>http://example.com</code> and a Location header of <code>example.html</code> was returned by the script, the server will return the same as if the client&rsquo;s request was directed towards <code>http://example.com/example.html</code>.</td>
+</tr>
+<tr>
+<td>Client redirect response</td>
+<td>When the response contains a Location header and its value represents an absolute URI path. In this case the server responds with a <code>302 Found</code> status and a reference to the URI for which the client is being redirected.</td>
+</tr>
+<tr>
+<td>Client redirect response with document</td>
+<td>This case is similar to the previous one, except that a message body is also returned by the CGI script, as well as a Content-Type and Status. The client is redirected but the message body is returned to the client as well. If the client is a web browser, this response body is most likely going to be ignored.</td>
+</tr>
+</tbody>
+</table>
+<div id="some-cgi-script-examples" class="anchor"></div>
+<h3 class="relative group">Some CGI script examples 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#some-cgi-script-examples" aria-label="Anchor">#</a></span>        
+    
+</h3>
+<p>To understand the CGI interface more concretely, let&rsquo;s discuss some examples. The examples below can be found in the repository for my CGI server implementation in Rust:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="nb">read</span> INDATA
+</span></span><span class="line"><span class="cl"><span class="nb">printf</span> <span class="s2">&#34;Content-Type: text/html\n\n&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">printf</span> <span class="s2">&#34;Body: </span><span class="si">${</span><span class="nv">INDATA</span><span class="si">}</span><span class="s2">&lt;br /&gt;&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">VAR</span><span class="o">=</span><span class="k">$(</span>env<span class="k">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">printf</span> <span class="s2">&#34;</span><span class="si">${</span><span class="nv">VAR</span><span class="p">//</span><span class="s1">$&#39;\n&#39;</span><span class="p">/&lt;br /&gt;</span><span class="si">}</span><span class="s2">&#34;</span></span></span></code></pre></td></tr></table>
+</div>
+</div>
+<p>The example above is a bash script that returns an HTML page containing the environment variables it received as well as the incoming request body.</p>
+
+  
+
+
+
+<div
+  
+    class="flex px-4 py-3 rounded-md bg-primary-100 dark:bg-primary-900"
+  >
+
+  <span
+    
+      class="text-primary-400 ltr:pr-3 rtl:pl-3 flex items-center"
+    >
+
+    
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M506.3 417l-213.3-364c-16.33-28-57.54-28-73.98 0l-213.2 364C-10.59 444.9 9.849 480 42.74 480h426.6C502.1 480 522.6 445 506.3 417zM232 168c0-13.25 10.75-24 24-24S280 154.8 280 168v128c0 13.25-10.75 24-23.1 24S232 309.3 232 296V168zM256 416c-17.36 0-31.44-14.08-31.44-31.44c0-17.36 14.07-31.44 31.44-31.44s31.44 14.08 31.44 31.44C287.4 401.9 273.4 416 256 416z"/></svg>
+
+  </span>
+
+
+  </span>
+
+  <span
+    
+      class="dark:text-neutral-300"
+    ><strong>Do not use such a script in production!</strong> The generated response exposes all environment variables sent to the script, and might contain sensitive data!</span>
+</div>
+
+<p>In this case, we are accessing the environment variables and standard input directly, but some languages have tools to abstract this interfacing for us. Take for instance our next example, now in Python:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="ch">#!/bin/python</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Import modules for CGI handling</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">cgi</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Create instance of FieldStorage</span>
+</span></span><span class="line"><span class="cl"><span class="n">form</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">FieldStorage</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Get data from fields</span>
+</span></span><span class="line"><span class="cl"><span class="n">first_name</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(</span><span class="s1">&#39;first_name&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">last_name</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(</span><span class="s1">&#39;last_name&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Content-type:text/html&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;&lt;html&gt;&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;head&gt;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;&lt;title&gt;Greeter&lt;/title&gt;&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;/head&gt;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;body&gt;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;&lt;h2&gt;Hello </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&lt;/h2&gt;&#34;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;/body&gt;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;/html&gt;&#39;</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div>
+<p>In this example, we use the <code>cgi</code> module which parses data sent via a request so that we can acess it directly. This page might be accessed after submitting the following form:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">form</span> <span class="na">action </span><span class="o">=</span> <span class="s">&#34;/cgi-bin/simple_form.py&#34;</span> <span class="na">method </span><span class="o">=</span> <span class="s">&#34;post&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    First Name: <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type </span><span class="o">=</span> <span class="s">&#34;text&#34;</span> <span class="na">name </span><span class="o">=</span> <span class="s">&#34;first_name&#34;</span><span class="p">&gt;&lt;</span><span class="nt">br</span> <span class="p">/&gt;</span>
+</span></span><span class="line"><span class="cl">    Last Name: <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type </span><span class="o">=</span> <span class="s">&#34;text&#34;</span> <span class="na">name </span><span class="o">=</span> <span class="s">&#34;last_name&#34;</span> <span class="p">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type </span><span class="o">=</span> <span class="s">&#34;submit&#34;</span> <span class="na">value </span><span class="o">=</span> <span class="s">&#34;Submit&#34;</span> <span class="p">/&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span></span></span></code></pre></td></tr></table>
+</div>
+</div>
+<p>As long as the Python script resides in the <code>/cgi-bin/simple_form.py</code> path, after submitting this form we will be greeted with the supplied first and last names correctly set.</p>
+<div id="cgi-drawbacks-and-modern-alternatives" class="anchor"></div>
+<h3 class="relative group">CGI drawbacks and modern alternatives 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#cgi-drawbacks-and-modern-alternatives" aria-label="Anchor">#</a></span>        
+    
+</h3>
+<p>Nowadays CGI isn&rsquo;t used as much, and more modern mechanisms have been developed. One of the main drawbacks of CGI is that it creates a separate process every time it receives a request for a CGI script, which creates a lot of overhead and makes the server less performant. We have new alternatives: the <a href="https://httpd.apache.org/"   target="_blank">
+    Apache HTTP server</a>, for instance, has modules supporting communication with specific languages (<code>mod_perl</code>, <code>mod_php</code>, <code>mod_python</code>, etc). There are also language-specific mechanisms such as Python&rsquo;s <a href="https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface"   target="_blank">
+    WSGI</a> and specific programs for receiving these requests, such as <a href="https://gunicorn.org/"   target="_blank">
+    Gunicorn</a>. These can be called by more general HTTP servers acting as a <a href="https://en.wikipedia.org/wiki/Reverse_proxy"   target="_blank">
+    reverse proxy</a>, such as the Apache server or <a href="https://www.nginx.com/"   target="_blank">
+    Nginx</a>.</p>
+<div id="conclusion" class="anchor"></div>
+<h2 class="relative group">Conclusion 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#conclusion" aria-label="Anchor">#</a></span>        
+    
+</h2>
+<p>The CGI specification was written in 1993 as a way to allow developers to create scripts that integrated with HTTP servers for dynamic interactions. Even though it isn&rsquo;t as popular anymore, understanding the inner workings, advantages and drawbacks of old interfaces and protocols can give us an understanding of why modern solutions are implemented as they are. It can also give us an appreciation for the engineering work that goes into defining and perfecting these interfaces and protocols that will be used by people all over the world. Implementing a simple version of this certainly was a fun experience, and if you are curious to see such an implementation you are welcome to see my repository and play with it! :)</p>
+<a id="github-10-1704750169668292552" target="_blank" href="https://github.com/lucasaug/rust-web-cgi" class="cursor-pointer">
+  <div
+    class="w-full md:w-auto pt-3 p-5 border border-neutral-200 dark:border-neutral-700 border rounded-md backdrop-blur shadow-2xl">
+
+    <div class="flex items-center">
+      <span class="text-2xl text-neutral-800 dark:text-neutral" style="margin-right:10px;">
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+  </span>
+
+
+      </span>
+      <div
+        id="github-10-1704750169668292552-full_name"
+        class="m-0 font-bold text-xl text-neutral-800 decoration-primary-500 hover:underline hover:underline-offset-2 dark:text-neutral">
+        lucasaug/rust-web-cgi
+      </div>
+    </div>
+
+    <p id="github-10-1704750169668292552-description" class="m-0 mt-2 text-md text-neutral-800 dark:text-neutral">
+      An HTTP server written in Rust with basic CGI support
+    </p>
+
+    <div class="m-0 mt-2 flex items-center">
+
+      <span class="mr-1 inline-block h-3 w-3 rounded-full"
+        style="background-color: #dea584"></span>
+      <div class="m-0 mr-5 text-md text-neutral-800 dark:text-neutral">
+         Rust 
+      </div>
+
+      <span class="text-md mr-1 text-neutral-800 dark:text-neutral">
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M287.9 0C297.1 0 305.5 5.25 309.5 13.52L378.1 154.8L531.4 177.5C540.4 178.8 547.8 185.1 550.7 193.7C553.5 202.4 551.2 211.9 544.8 218.2L433.6 328.4L459.9 483.9C461.4 492.9 457.7 502.1 450.2 507.4C442.8 512.7 432.1 513.4 424.9 509.1L287.9 435.9L150.1 509.1C142.9 513.4 133.1 512.7 125.6 507.4C118.2 502.1 114.5 492.9 115.1 483.9L142.2 328.4L31.11 218.2C24.65 211.9 22.36 202.4 25.2 193.7C28.03 185.1 35.5 178.8 44.49 177.5L197.7 154.8L266.3 13.52C270.4 5.249 278.7 0 287.9 0L287.9 0zM287.9 78.95L235.4 187.2C231.9 194.3 225.1 199.3 217.3 200.5L98.98 217.9L184.9 303C190.4 308.5 192.9 316.4 191.6 324.1L171.4 443.7L276.6 387.5C283.7 383.7 292.2 383.7 299.2 387.5L404.4 443.7L384.2 324.1C382.9 316.4 385.5 308.5 391 303L476.9 217.9L358.6 200.5C350.7 199.3 343.9 194.3 340.5 187.2L287.9 78.95z"/></svg>
+  </span>
+
+
+      </span>
+      <div id="github-10-1704750169668292552-stargazers" class="m-0 mr-5 text-md text-neutral-800 dark:text-neutral">
+        0
+      </div>
+
+      <span class="text-md mr-1 text-neutral-800 dark:text-neutral">
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M80 104c13.3 0 24-10.7 24-24s-10.7-24-24-24S56 66.7 56 80s10.7 24 24 24zm80-24c0 32.8-19.7 61-48 73.3V192c0 17.7 14.3 32 32 32H304c17.7 0 32-14.3 32-32V153.3C307.7 141 288 112.8 288 80c0-44.2 35.8-80 80-80s80 35.8 80 80c0 32.8-19.7 61-48 73.3V192c0 53-43 96-96 96H256v70.7c28.3 12.3 48 40.5 48 73.3c0 44.2-35.8 80-80 80s-80-35.8-80-80c0-32.8 19.7-61 48-73.3V288H144c-53 0-96-43-96-96V153.3C19.7 141 0 112.8 0 80C0 35.8 35.8 0 80 0s80 35.8 80 80zm208 24c13.3 0 24-10.7 24-24s-10.7-24-24-24s-24 10.7-24 24s10.7 24 24 24zM248 432c0-13.3-10.7-24-24-24s-24 10.7-24 24s10.7 24 24 24s24-10.7 24-24z"/></svg>
+  </span>
+
+
+      </span>
+      <div id="github-10-1704750169668292552-forks" class="m-0 mr-5 text-md text-neutral-800 dark:text-neutral">
+        0
+      </div>
+
+    </div>
+
+  </div>
+  <script>
+    fetch("https://api.github.com/repos/lucasaug/rust-web-cgi", {
+      headers: new Headers({
+        'User-agent': 'Mozilla/4.0 Custom User Agent'
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('github-10-1704750169668292552-full_name').innerHTML = data.full_name;
+        document.getElementById('github-10-1704750169668292552-description').innerHTML = data.description;
+        document.getElementById('github-10-1704750169668292552-stargazers').innerHTML = data.stargazers_count;
+        document.getElementById('github-10-1704750169668292552-forks').innerHTML = data.forks;
+      })
+      .catch(error => console.error(error))
+  </script>
+</a>
+<p>Thank you so much for reading my first post!</p>
+<div id="references" class="anchor"></div>
+<h2 class="relative group">References 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#references" aria-label="Anchor">#</a></span>        
+    
+</h2>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc3875.pdf"   target="_blank">
+    RFC 3875 (the original proposal for the CGI interface)</a></li>
+<li><a href="https://www.cgi101.com/book/ch3/text.html"   target="_blank">
+    Chapter 3 of &ldquo;CGI Programming 101&rdquo;, by Jacqueline D. Hamilton</a></li>
+<li><a href="https://www.oreilly.com/openbook/cgi/ch03_02.html"   target="_blank">
+    Chapter 3.2 of O&rsquo;Reilly&rsquo;s &ldquo;CGI Programming on the World Wide Web&rdquo;, by Shishir Gundavaram</a></li>
+</ul>
+<div id="credits" class="anchor"></div>
+<h2 class="relative group">Credits 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#credits" aria-label="Anchor">#</a></span>        
+    
+</h2>
+<ul>
+<li><a href="https://www.pexels.com/pt-br/foto/botoes-teclado-mensagem-palavra-2882570/"   target="_blank">
+    Thumbnail image by Miguel Á. Padriñán on Pexels</a></li>
+</ul>
+
+        </div>
+                
+        
+
+        
+
+          
+      </div>
+     
+     <script>
+        var oid = "views_posts\/writing-a-cgi-server-in-rust\/index.md"
+        var oid_likes = "likes_posts\/writing-a-cgi-server-in-rust\/index.md"
+      </script>
+      
+      
+      <script type="text/javascript" src="/js/page.min.0e49973b4ad0a382c7c6012d8bff8226316642daabc4f8a20477bd08674f3da6e2fa993bc20ad4f51e7c5bb68e6f913a207a7c4fe37ea0e7b806894afce0a64e.js" integrity="sha512-DkmXO0rQo4LHxgEti/&#43;CJjFmQtqrxPiiBHe9CGdPPabi&#43;pk7wgrU9R58W7aOb5E6IHp8T&#43;N&#43;oOe4BolK/OCmTg=="></script>
+  
+    </section>
+  <footer class="pt-8 max-w-prose print:hidden">
+
+    
+  
+
+
+    
+  </footer>
+</article>
+
+      <div id="top-scroller" class="pointer-events-none absolute top-[110vh] bottom-0 w-12 ltr:right-0 rtl:left-0">
+  <a href="#the-top"
+    class="pointer-events-auto sticky top-[calc(100vh-5.5rem)] flex h-12 w-12 mb-16 items-center justify-center rounded-full bg-neutral/50 text-xl text-neutral-700 backdrop-blur hover:text-primary-600 dark:bg-neutral-800/50 dark:text-neutral dark:hover:text-primary-400"
+    aria-label="Scroll to top" title="Scroll to top">
+    &uarr;
+  </a>
+</div>
+    </main><footer id="site-footer" class="py-10 print:hidden">
+  
+  
+    
+  
+  <div class="flex items-center justify-between">
+
+    
+    
+    <p class="text-sm text-neutral-500 dark:text-neutral-400">
+      &copy;
+      2024
+      Lucas Augusto
+    </p>
+    
+
+    
+    
+    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+      
+      
+      Powered by <a class="hover:underline hover:decoration-primary-400 hover:text-primary-500"
+        href="https://gohugo.io/" target="_blank" rel="noopener noreferrer">Hugo</a> &amp; <a class="hover:underline hover:decoration-primary-400 hover:text-primary-500"
+        href="https://blowfish.page/" target="_blank" rel="noopener noreferrer">Blowfish</a>
+    </p>
+    
+
+  </div>
+  <script>
+    
+  </script>
+  
+  
+  <script type="text/javascript" src="/js/process.min.35c1113bcc16c5a59bf031082f9e63822aa95280423881a7847a7ff33a16e6299ce6a840d9ef4e10d947e030a18f3f20359afb2ec0f35967484b9a9360ac3145.js" integrity="sha512-NcERO8wWxaWb8DEIL55jgiqpUoBCOIGnhHp/8zoW5imc5qhA2e9OENlH4DChjz8gNZr7LsDzWWdIS5qTYKwxRQ=="></script>
+  
+  
+  <div class="bgcontainer">
+    <canvas id="glcanvas"/>
+</div>
+<script id="vertex-shader">
+    attribute vec2 aVertexPosition;
+
+    void main() {
+        gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+    }
+</script>
+<script id="fragment-shader">
+    #ifdef GL_ES
+        precision highp float;
+    #endif
+
+    
+    
+    
+
+    uniform vec2  iResolution; 
+    uniform float iTime;       
+    uniform vec2  iMouse;      
+    uniform float  iScroll;    
+
+    float grid(vec2 uv)
+    {
+        vec2 size = vec2(uv.y, uv.y * uv.y * 0.2) * 0.01;
+        uv += vec2(0.0, iTime/5.);
+        uv = abs(fract(uv) - 0.5);
+        vec2 lines = smoothstep(size, vec2(0.0), uv);
+        lines += smoothstep(size * 5.0, vec2(0.0), uv);
+        return clamp(lines.x + lines.y, 0.0, 3.0);
+    }
+
+    float noise2d(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(1.0,73))) * 43758.5453);
+    }
+
+    void main()
+    {
+        vec2 uv = (2.0 * gl_FragCoord.xy - iResolution.xy) / iResolution.y;
+
+        vec2 offsetCoords = iMouse * 300.;
+
+        
+        uv.y += (offsetCoords.y/iResolution.y + 0.5)/7.5;
+
+        float fog = smoothstep(0.1, -0.02, abs(uv.y + 0.2));
+        
+        vec3 col = vec3(0.1, 0.1, 0.2);
+        if (uv.y < -0.2)
+        {
+            uv.y = 3.0 / (abs(uv.y + 0.2) + 0.05);
+            uv.x *= uv.y * 1.0;
+            float gridVal = grid(uv);
+            col = mix(col, vec3(0.6 - 0.2 * (iMouse.x), 0.5, 1.0), gridVal);
+        }
+
+        col += fog * fog * fog * fog;
+        col *= mix(0., 0.5, clamp(sin(iTime * 0.7), 0.75, 1.));
+        if (false && iTime < 1.) {
+            
+            
+            col += vec3(
+                noise2d(    uv * iTime) *
+                noise2d(1.+ uv * iTime) *
+                noise2d(2.+ uv * iTime)
+            ) * exp(-5.*iTime) * 6.;
+        }
+
+        vec4 gridColor = vec4(col, 1.0)/3.;
+        vec4 fadedColor = vec4(0.,0.,0.,1.);
+        float mixProportion = clamp(iScroll, 0., 0.6);
+
+        gl_FragColor = mix(gridColor, fadedColor, mixProportion);
+
+    }
+</script>
+<script src="/js/libs/three.min.js"></script>
+<script src="/js/shader_setup.js"></script>
+
+  
+</footer>
+  </div>
+</body>
+
+</html>

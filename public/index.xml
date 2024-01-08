@@ -1,30 +1,50 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Blowfish</title>
+    <title>Lucas Augusto&#39;s Blog</title>
     <link>https://lucasaug.github.io/</link>
-    <description>Recent content on Blowfish</description>
+    <description>Recent content on Lucas Augusto&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <copyright>© 2023 Lucas Augusto</copyright>
-    <atom:link href="https://lucasaug.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <copyright>© 2024 Lucas Augusto</copyright>
+    <lastBuildDate>Sun, 07 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://lucasaug.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title></title>
-      <link>https://lucasaug.github.io/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <title>HTTP servers and an overview of the CGI interface</title>
+      <link>https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
       
-      <guid>https://lucasaug.github.io/about/</guid>
-      <description></description>
+      <guid>https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/</guid>
+      <description>An overview of HTTP servers and CGI</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://lucasaug.github.io/posts/writing-a-cgi-server-in-rust/featured.jpg" />
+    </item>
+    
+    <item>
+      <title>Rust Web CGI</title>
+      <link>https://lucasaug.github.io/projects/rust-web-cgi/</link>
+      <pubDate>Wed, 06 Dec 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/projects/rust-web-cgi/</guid>
+      <description>A simple implementation of a CGI-capable HTTP server in Rust</description>
       
     </item>
     
     <item>
       <title></title>
-      <link>https://lucasaug.github.io/projects/teste/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <link>https://lucasaug.github.io/about/</link>
+      <pubDate>Mon, 27 Nov 2023 00:00:00 +0000</pubDate>
       
-      <guid>https://lucasaug.github.io/projects/teste/</guid>
-      <description>Teste # Eu tenho uma coisa importante pra te dizer:</description>
+      <guid>https://lucasaug.github.io/about/</guid>
+      <description>Hello, my name is Lucas!</description>
+      
+    </item>
+    
+    <item>
+      <title>HTTP Runner</title>
+      <link>https://lucasaug.github.io/projects/http-runner/</link>
+      <pubDate>Sun, 04 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/projects/http-runner/</guid>
+      <description>My entry to the 2020 edition of JS13K.</description>
       
     </item>
     

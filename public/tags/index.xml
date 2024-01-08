@@ -1,12 +1,72 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Tags on Blowfish</title>
+    <title>Tags on Lucas Augusto&#39;s Blog</title>
     <link>https://lucasaug.github.io/tags/</link>
-    <description>Recent content in Tags on Blowfish</description>
+    <description>Recent content in Tags on Lucas Augusto&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <copyright>© 2023 Lucas Augusto</copyright>
-    <atom:link href="https://lucasaug.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <copyright>© 2024 Lucas Augusto</copyright>
+    <lastBuildDate>Sun, 07 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://lucasaug.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>backend</title>
+      <link>https://lucasaug.github.io/tags/backend/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/tags/backend/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title>cgi</title>
+      <link>https://lucasaug.github.io/tags/cgi/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/tags/cgi/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title>http</title>
+      <link>https://lucasaug.github.io/tags/http/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/tags/http/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title>project</title>
+      <link>https://lucasaug.github.io/tags/project/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/tags/project/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title>rust</title>
+      <link>https://lucasaug.github.io/tags/rust/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/tags/rust/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title>web</title>
+      <link>https://lucasaug.github.io/tags/web/</link>
+      <pubDate>Sun, 07 Jan 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://lucasaug.github.io/tags/web/</guid>
+      <description></description>
+      
+    </item>
+    
   </channel>
 </rss>

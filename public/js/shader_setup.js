@@ -9,8 +9,6 @@ if (matchMedia('(pointer:fine)').matches) {
     window.onmousemove = (event) => {
         mouseX = -2 * ((event.clientX / window.innerWidth) - 0.5);
         mouseY = -2 * ((event.clientY / window.innerHeight) - 0.5);
-        console.log(mouseX);
-        console.log(mouseY);
     };
 }
 
@@ -96,6 +94,7 @@ function startup() {
         "iResolution",
         "iTime",
         "iMouse",
+        "iScroll",
     ];
     const shaderAttributes = [
         "aVertexPosition",
@@ -164,12 +163,18 @@ function animateScene() {
 
     const elapsedSec = ((new Date()) - initTime) / 1000;
 
+    const scrollProportion = (document.documentElement.scrollTop ||
+        document.body.scrollTop) / document.documentElement.clientHeight;
+
+
     gl.uniform2fv(shaderProgram.uniforms["iResolution"],
         new Float32Array([vw, vh]));
     gl.uniform1f(shaderProgram.uniforms["iTime"],
         new Float32Array([elapsedSec]));
     gl.uniform2fv(shaderProgram.uniforms["iMouse"],
         new Float32Array([mouseX, mouseY]));
+    gl.uniform1f(shaderProgram.uniforms["iScroll"],
+        new Float32Array([scrollProportion]));
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertexCount);
 
