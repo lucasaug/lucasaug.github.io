@@ -45,15 +45,15 @@
         // uv.x += (offsetCoords.x/iResolution.x - 0.5)/5.;
         uv.y += (offsetCoords.y/iResolution.y + 0.5)/7.5;
 
-        float fog = smoothstep(0.1, -0.02, abs(uv.y + 0.2));
+        float fog = smoothstep(0.1, -0.02, abs(uv.y + 0.));
         // vec3 col = vec3(0.0, 0.1, 0.2);
         vec3 col = vec3(0.1, 0.1, 0.2);
-        if (uv.y < -0.2)
+        if (uv.y < -0.)
         {
-            uv.y = 3.0 / (abs(uv.y + 0.2) + 0.05);
+            uv.y = 3.0 / (abs(uv.y + 0.) + 0.05);
             uv.x *= uv.y * 1.0;
             float gridVal = grid(uv);
-            col = mix(col, vec3(0.6 - 0.2 * (iMouse.x), 0.5, 1.0), gridVal);
+            col = mix(col, vec3(0.6 - 0. * (iMouse.x), 0.5, 1.0), gridVal);
         }
 
         col += fog * fog * fog * fog;
