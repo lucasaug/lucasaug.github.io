@@ -1,14 +1,5 @@
-<div class="bgcontainer">
-    <canvas id="glcanvas"/>
-</div>
-<script id="vertex-shader">
-    attribute vec2 aVertexPosition;
-
-    void main() {
-        gl_Position = vec4(aVertexPosition, 0.0, 1.0);
-    }
-</script>
-<script id="fragment-shader">
+<script src="/js/libs/shader-web-background.min.js"></script>
+<script id="bgshader">
     #ifdef GL_ES
         precision highp float;
     #endif
@@ -53,12 +44,12 @@
             uv.y = 3.0 / (abs(uv.y + 0.) + 0.05);
             uv.x *= uv.y * 1.0;
             float gridVal = grid(uv);
-            col = mix(col, vec3(0.6 - 0. * (iMouse.x), 0.5, 1.0), gridVal);
+            col = mix(col, vec3(0.6 - 0.1 * (iMouse.x), 0.5, 1.0), gridVal);
         }
 
         col += fog * fog * fog * fog;
         col *= mix(0., 0.5, clamp(sin(iTime * 0.7), 0.75, 1.));
-        if (false && iTime < 1.) {
+        /*if (iTime < 1.) {
             // Getting too spatially correlated over time, maybe divide or
             // clamp time if this is used outside the if
             col += vec3(
@@ -66,7 +57,7 @@
                 noise2d(1.+ uv * iTime) *
                 noise2d(2.+ uv * iTime)
             ) * exp(-5.*iTime) * 6.;
-        }
+        }*/
 
         vec4 gridColor = vec4(col, 1.0)/3.;
         vec4 fadedColor = vec4(0.,0.,0.,1.);
@@ -76,5 +67,44 @@
 
     }
 </script>
-<script src="/js/libs/three.min.js"></script>
-<script src="/js/shader_setup.js"></script>
+<script>
+    let mouseX = 0;
+    let mouseY = 0;
+
+    if (matchMedia('(pointer:fine)').matches) {
+        window.onmousemove = (event) => {
+            mouseX = -2 * ((event.clientX / window.innerWidth) - 0.5);
+            mouseY = -2 * ((event.clientY / window.innerHeight) - 0.5);
+        };
+    }
+
+    // The shader script requires this, but setting it directly makes Hugo
+    // misbehave
+    document.getElementById("bgshader").setAttribute("type", "x-shader/x-fragment")
+    shaderWebBackground.shade({
+        shaders: {
+            bgshader: {
+                uniforms: {
+                    iTime: (gl, loc) => gl.uniform1f(loc, performance.now() / 1000),
+                    iResolution: (gl, loc) => {
+                        const vw = Math.max(document.documentElement.clientWidth || 0,
+                            window.innerWidth || 0);
+                        const vh = Math.max(document.documentElement.clientHeight || 0,
+                            window.innerHeight || 0);
+                        gl.uniform2fv(loc, new Float32Array([vw, vh]));
+                    },
+                    iMouse: (gl, loc) => gl.uniform2fv(loc, new Float32Array([mouseX, mouseY])),
+                    iScroll: (gl, loc) => {
+                        let scrollProportion = 0
+                        if (document.documentElement.clientHeight != 0)
+                            scrollProportion = (
+                                document.documentElement.scrollTop || document.body.scrollTop)
+                                / document.documentElement.clientHeight;
+
+                        gl.uniform1fv(loc, new Float32Array([scrollProportion]))
+                    }
+                }
+            }
+        }
+    });
+</script>

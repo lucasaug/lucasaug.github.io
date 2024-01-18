@@ -163,8 +163,11 @@ function animateScene() {
 
     const elapsedSec = ((new Date()) - initTime) / 1000;
 
-    const scrollProportion = (document.documentElement.scrollTop ||
-        document.body.scrollTop) / document.documentElement.clientHeight;
+    let scrollProportion = 0
+    if (document.documentElement.clientHeight != 0)
+        scrollProportion = (
+            document.documentElement.scrollTop || document.body.scrollTop)
+            / document.documentElement.clientHeight;
 
 
     gl.uniform2fv(shaderProgram.uniforms["iResolution"],
@@ -179,7 +182,6 @@ function animateScene() {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertexCount);
 
     window.requestAnimationFrame(function(currentTime) {
-        previousTime = currentTime;
         animateScene();
     });
 }
