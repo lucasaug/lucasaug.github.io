@@ -68,13 +68,14 @@
     }
 </script>
 <script>
-    let mouseX = 0;
-    let mouseY = 0;
+    let mouseX;
+    let mouseY;
+    let minDimension;
 
     if (matchMedia('(pointer:fine)').matches) {
         window.onmousemove = (event) => {
-            mouseX = -2 * ((event.clientX / window.innerWidth) - 0.5);
-            mouseY = -2 * ((event.clientY / window.innerHeight) - 0.5);
+            mouseX = event.clientX;
+            mouseY = event.clientY;
         };
     }
 
@@ -82,18 +83,25 @@
     // misbehave
     document.getElementById("bgshader").setAttribute("type", "x-shader/x-fragment")
     shaderWebBackground.shade({
+        onResize: (width, height) => {
+            minDimension = Math.min(width, height);
+        },
+        onInit: (ctx) => {
+            mouseX = ctx.cssWidth / 2;
+            mouseY = ctx.cssHeight / 2;
+        },
+        onBeforeFrame: (ctx) => {
+            ctx.stMouseX = (ctx.toShaderX(mouseX) * 2 - ctx.width) / minDimension;
+            ctx.stMouseY = (ctx.toShaderY(mouseY) * 2 - ctx.height) / minDimension;
+        },
         shaders: {
             bgshader: {
                 uniforms: {
                     iTime: (gl, loc) => gl.uniform1f(loc, performance.now() / 1000),
-                    iResolution: (gl, loc) => {
-                        const vw = Math.max(document.documentElement.clientWidth || 0,
-                            window.innerWidth || 0);
-                        const vh = Math.max(document.documentElement.clientHeight || 0,
-                            window.innerHeight || 0);
-                        gl.uniform2fv(loc, new Float32Array([vw, vh]));
+                    iResolution: (gl, loc, ctx) => {
+                        gl.uniform2f(loc, ctx.width, ctx.height);
                     },
-                    iMouse: (gl, loc) => gl.uniform2fv(loc, new Float32Array([mouseX, mouseY])),
+                    iMouse: (gl, loc, ctx) => gl.uniform2f(loc, ctx.stMouseX, ctx.stMouseY),
                     iScroll: (gl, loc) => {
                         let scrollProportion = 0
                         if (document.documentElement.clientHeight != 0)
@@ -101,7 +109,7 @@
                                 document.documentElement.scrollTop || document.body.scrollTop)
                                 / document.documentElement.clientHeight;
 
-                        gl.uniform1fv(loc, new Float32Array([scrollProportion]))
+                        gl.uniform1f(loc, scrollProportion)
                     }
                 }
             }
