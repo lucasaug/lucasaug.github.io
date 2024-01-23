@@ -4,14 +4,14 @@
   /* Grayish purple */
   --color-neutral-50:     255,255,255;
   --color-neutral-100:    255,255,255;
-  --color-neutral-200:    222,222,238;
-  --color-neutral-300:    171,171,213;
-  --color-neutral-400:    120,120,188;
-  --color-neutral-500:    77,77,154;
-  --color-neutral-600:    63,63,127;
-  --color-neutral-700:    50,50,100;
-  --color-neutral-800:    36,36,72;
-  --color-neutral-900:    23,23,45;
+  --color-neutral-200:    244,244,249;
+  --color-neutral-300:    193,193,223;
+  --color-neutral-400:    143,143,196;
+  --color-neutral-500:    93,93,170;
+  --color-neutral-600:    76,76,146;
+  --color-neutral-700:    62,62,119;
+  --color-neutral-800:    48,48,92;
+  --color-neutral-900:    34,34,65;
   /* Blue */
   --color-primary-50: 239, 246, 255;
   --color-primary-100: 219, 234, 254;
