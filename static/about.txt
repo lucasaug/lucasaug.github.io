@@ -1,6 +1,6 @@
 This favicon was generated using the following font:
 
-- Font Title: Khmer
-- Font Author: http://scripts.sil.org/OFL
-- Font Source: http://fonts.gstatic.com/s/khmer/v29/MjQImit_vPPwpF-BpN2EeYmD.ttf
+- Font Title: Rubik Doodle Shadow
+- Font Author: Copyright 2020 The Rubik Filtered Project Authors (https://github.com/NaN-xyz/Rubik-Filtered)
+- Font Source: https://fonts.gstatic.com/s/rubikdoodleshadow/v1/rP2bp3im_k8G_wTVdvvMdHqmXTR3lEaLyKuZ3KOY7Gw.ttf
 - Font License: SIL Open Font License, 1.1 (http://scripts.sil.org/OFL))
